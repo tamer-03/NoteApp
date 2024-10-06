@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:note_app/screen/add_note.dart';
 import 'package:note_app/screen/note_detail.dart';
 
 class Note {
@@ -38,7 +39,7 @@ class _HomePageState extends State<HomePage> {
       ),
       body: _builderNoteList(),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: _goAddNotePage,
         backgroundColor: Theme.of(context).primaryColor,
         child: const Icon(Icons.add),
       ),
@@ -72,6 +73,13 @@ class _HomePageState extends State<HomePage> {
         );
       },
     );
+  }
+
+  void _goAddNotePage() {
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => AddNote(
+              notes: notes,
+            )));
   }
 
   String _getShortContent(String content) {
