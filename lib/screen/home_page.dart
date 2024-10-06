@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:note_app/screen/note_detail.dart';
 
 class Note {
   final String title;
@@ -32,10 +33,15 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Note'),
+        title: const Text('My Notes'),
         backgroundColor: Theme.of(context).primaryColor,
       ),
       body: _builderNoteList(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {},
+        backgroundColor: Theme.of(context).primaryColor,
+        child: const Icon(Icons.add),
+      ),
     );
   }
 
@@ -53,7 +59,15 @@ class _HomePageState extends State<HomePage> {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            onTap: () {},
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => NoteDetail(
+                    note: note,
+                  ),
+                ),
+              );
+            },
           ),
         );
       },
