@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:note_app/screen/home_page.dart';
 
 class AddNote extends StatefulWidget {
-  final List<Note> notes;
-  const AddNote({super.key, required this.notes});
+  const AddNote({super.key});
 
   @override
   State<AddNote> createState() => _AddNoteState();
 }
 
 class _AddNoteState extends State<AddNote> {
+  final DataBaseHelper dbHelper = DataBaseHelper();
   String title = "";
   String content = "";
 
@@ -62,13 +62,16 @@ class _AddNoteState extends State<AddNote> {
               style: ButtonStyle(
                   backgroundColor:
                       WidgetStatePropertyAll(Theme.of(context).primaryColor),
-                  foregroundColor: WidgetStatePropertyAll(Colors.white)),
-              onPressed: () {
+                  foregroundColor: const WidgetStatePropertyAll(Colors.white)),
+              onPressed: () async {
                 if (title.isNotEmpty && descriptionController.text.isNotEmpty) {
-                  setState(() {
-                    widget.notes.add(Note(
-                        title: title, content: descriptionController.text));
-                  });
+                  Note newNote = Note(title: title, content: content);
+                  await dbHelper.insertNote(newNote);
+                  //await Future.delayed(const Duration(seconds: 2));
+                  if (context.mounted) Navigator.of(context).pop(true);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text('Başlık ve içerik Boş olamaz')));
                 }
               },
               child: const Text("Add Note"))
