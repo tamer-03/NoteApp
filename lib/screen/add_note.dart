@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:note_app/screen/home_page.dart';
+
+import 'package:note_app/repository/data_base_helper.dart';
+
+import 'package:note_app/model/Note.dart';
 
 class AddNote extends StatefulWidget {
   const AddNote({super.key});
