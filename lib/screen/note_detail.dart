@@ -30,11 +30,16 @@ class _NoteDetailState extends State<NoteDetail> {
   }
 
   void _saveNote() async {
-    Note note = Note(
-        id: widget.note.id,
-        title: widget.note.title,
-        content: widget.note.content);
-    await _baseHelper.updateNote(note);
+    if (widget.note.title.isNotEmpty || widget.note.content.isNotEmpty) {
+      Note note = Note(
+          id: widget.note.id,
+          title: widget.note.title,
+          content: widget.note.content);
+      await _baseHelper.updateNote(note);
+    } else {
+      await _baseHelper.deleteNote(widget.note.id!);
+    }
+
     if (mounted) {
       Navigator.pop(context, true);
     }
@@ -46,28 +51,66 @@ class _NoteDetailState extends State<NoteDetail> {
         appBar: AppBar(
           title: const Text("Note Detail"),
           backgroundColor: Theme.of(context).primaryColor,
+          automaticallyImplyLeading: false,
+          leading: BackButton(
+            onPressed: () {
+              _saveNote();
+            },
+          ),
           actions: [
             IconButton(
-              onPressed: _saveNote,
-              icon: const Icon(Icons.save),
+              onPressed: () async {
+                await _baseHelper.deleteNote(widget.note.id!);
+                if (context.mounted) {
+                  Navigator.pop(context, true);
+                }
+              },
+              icon: const Icon(Icons.delete),
             )
           ],
         ),
-        body: Column(
-          children: [
-            TextField(
-              controller: _titleController,
-              onChanged: (value) {
-                widget.note.title = value;
-              },
-            ),
-            TextField(
-              controller: _contentController,
-              onChanged: (value) {
-                widget.note.content = value;
-              },
-            )
-          ],
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              TextField(
+                cursorColor: Colors.black,
+                controller: _titleController,
+                textInputAction: TextInputAction.next,
+                decoration: const InputDecoration(
+                  enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.black)),
+                  focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.black)),
+                  hintText: "Başlık",
+                  labelStyle: TextStyle(color: Colors.black),
+                ),
+                onChanged: (value) {
+                  widget.note.title = value;
+                },
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              TextField(
+                maxLines: null,
+                cursorColor: Colors.black,
+                controller: _contentController,
+                textInputAction: TextInputAction.newline,
+                decoration: const InputDecoration(
+                  enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.black)),
+                  focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.black)),
+                  hintText: "Başlık",
+                  labelStyle: TextStyle(color: Colors.black),
+                ),
+                onChanged: (value) {
+                  widget.note.content = value;
+                },
+              )
+            ],
+          ),
         ));
   }
 }

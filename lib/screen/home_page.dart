@@ -15,6 +15,9 @@ class _HomePageState extends State<HomePage> {
   final DataBaseHelper _dataBaseHelper = DataBaseHelper();
   List<Note> _notes = [];
 
+  bool _isSelectionMode = false;
+  final Set<int> _selectedNoteIds = {};
+
   @override
   void initState() {
     super.initState();
@@ -31,16 +34,15 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Notes'),
-        backgroundColor: Theme.of(context).primaryColor,
-      ),
+      appBar: _isSelectionMode ? _buildSelectionAppBar() : _buildNormalAppBar(),
       body: _builderNoteList(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _goAddNotePage,
-        backgroundColor: Theme.of(context).primaryColor,
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: _isSelectionMode
+          ? null
+          : FloatingActionButton(
+              onPressed: _goAddNotePage,
+              backgroundColor: Theme.of(context).primaryColor,
+              child: const Icon(Icons.add),
+            ),
     );
   }
 
@@ -49,10 +51,30 @@ class _HomePageState extends State<HomePage> {
       itemCount: _notes.length,
       itemBuilder: (context, index) {
         final note = _notes[index];
+        final isSelected = _selectedNoteIds.contains(note.id);
         return Card(
-          color: Theme.of(context).primaryColor,
+          color: _isSelectionMode && isSelected
+              ? Colors.grey[300]
+              : Theme.of(context).primaryColor,
           margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
           child: ListTile(
+            trailing: _isSelectionMode
+                ? Checkbox(
+                    value: isSelected,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        if (value == true) {
+                          _selectedNoteIds.add(note.id!);
+                        } else {
+                          _selectedNoteIds.remove(note.id!);
+                        }
+
+                        if (_selectedNoteIds.isEmpty) {
+                          _isSelectionMode = false;
+                        }
+                      });
+                    })
+                : null,
             title: Text(
               note.title,
               style: const TextStyle(fontWeight: FontWeight.bold),
@@ -62,29 +84,37 @@ class _HomePageState extends State<HomePage> {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            onTap: () async {
-              bool? isNoteUpdated = await Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => NoteDetail(
-                    note: note,
-                  ),
-                ),
-              );
-              if (isNoteUpdated ?? false) {
-                _refreshNotes();
-              }
+            onTap: _isSelectionMode
+                ? () {
+                    setState(() {
+                      if (isSelected) {
+                        _selectedNoteIds.remove(note.id!);
+                        if (_selectedNoteIds.isEmpty) {
+                          _isSelectionMode = false;
+                        }
+                      } else {
+                        _selectedNoteIds.add(note.id!);
+                      }
+                    });
+                  }
+                : () async {
+                    bool? isNoteUpdated = await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => NoteDetail(
+                          note: note,
+                        ),
+                      ),
+                    );
+                    if (isNoteUpdated ?? false) {
+                      _refreshNotes();
+                    }
+                  },
+            onLongPress: () {
+              setState(() {
+                _isSelectionMode = true;
+                _selectedNoteIds.add(note.id!);
+              });
             },
-            trailing: IconButton(
-              onPressed: () async {
-                await _dataBaseHelper.deleteNote(note.id!);
-                _refreshNotes();
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('note silindi')));
-                }
-              },
-              icon: const Icon(Icons.delete),
-            ),
           ),
         );
       },
@@ -107,5 +137,46 @@ class _HomePageState extends State<HomePage> {
     } else {
       return '${content.substring(0, maxLength)}...';
     }
+  }
+
+  AppBar _buildNormalAppBar() {
+    return AppBar(
+      title: const Text('My Notes'),
+      backgroundColor: Theme.of(context).primaryColor,
+    );
+  }
+
+  AppBar _buildSelectionAppBar() {
+    return AppBar(
+      title: Text('${_selectedNoteIds.length} Seçildi'),
+      backgroundColor: Theme.of(context).primaryColor,
+      automaticallyImplyLeading: false,
+      leading: IconButton(
+        onPressed: () {
+          setState(() {
+            _isSelectionMode = false;
+            _selectedNoteIds.clear();
+          });
+        },
+        icon: const Icon(Icons.close),
+      ),
+      actions: [
+        IconButton(
+            onPressed: _deleteSelectedNotes, icon: const Icon(Icons.delete))
+      ],
+    );
+  }
+
+  void _deleteSelectedNotes() async {
+    for (var id in _selectedNoteIds) {
+      await _dataBaseHelper.deleteNote(id);
+    }
+
+    setState(() {
+      _isSelectionMode = false;
+      _selectedNoteIds.clear();
+    });
+
+    _refreshNotes();
   }
 }
