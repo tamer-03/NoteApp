@@ -50,23 +50,41 @@ class _HomePageState extends State<HomePage> {
       itemBuilder: (context, index) {
         final note = _notes[index];
         return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+          color: Theme.of(context).primaryColor,
+          margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
           child: ListTile(
-            title: Text(note.title),
+            title: Text(
+              note.title,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
             subtitle: Text(
               _getShortContent(note.content),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            onTap: () {
-              Navigator.of(context).push(
+            onTap: () async {
+              bool? isNoteUpdated = await Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => NoteDetail(
                     note: note,
                   ),
                 ),
               );
+              if (isNoteUpdated ?? false) {
+                _refreshNotes();
+              }
             },
+            trailing: IconButton(
+              onPressed: () async {
+                await _dataBaseHelper.deleteNote(note.id!);
+                _refreshNotes();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('note silindi')));
+                }
+              },
+              icon: const Icon(Icons.delete),
+            ),
           ),
         );
       },
@@ -74,7 +92,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _goAddNotePage() async {
-    bool? isNoteAdded = await Navigator.of(this.context)
+    bool? isNoteAdded = await Navigator.of(context)
         .push(MaterialPageRoute(builder: (context) => const AddNote()));
 
     if (isNoteAdded == true) {

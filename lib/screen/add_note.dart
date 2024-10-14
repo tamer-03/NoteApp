@@ -38,6 +38,7 @@ class _AddNoteState extends State<AddNote> {
               labelStyle: TextStyle(color: Colors.black),
               filled: true,
               fillColor: Color.fromARGB(255, 255, 255, 255),
+              
             ),
             onChanged: (value) {
               title = value;
