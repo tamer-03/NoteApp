@@ -33,16 +33,28 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: _isSelectionMode ? _buildSelectionAppBar() : _buildNormalAppBar(),
-      body: _builderNoteList(),
-      floatingActionButton: _isSelectionMode
-          ? null
-          : FloatingActionButton(
-              onPressed: _goAddNotePage,
-              backgroundColor: Theme.of(context).primaryColor,
-              child: const Icon(Icons.add),
-            ),
+    return PopScope(
+      onPopInvokedWithResult: (value, result) {
+        if (value) {
+          return;
+        }
+        _selectedNoteIds.clear();
+        _isSelectionMode = false;
+        _refreshNotes();
+      },
+      canPop: false,
+      child: Scaffold(
+        appBar:
+            _isSelectionMode ? _buildSelectionAppBar() : _buildNormalAppBar(),
+        body: _builderNoteList(),
+        floatingActionButton: _isSelectionMode
+            ? null
+            : FloatingActionButton(
+                onPressed: _goAddNotePage,
+                backgroundColor: Theme.of(context).primaryColor,
+                child: const Icon(Icons.add),
+              ),
+      ),
     );
   }
 
@@ -162,7 +174,38 @@ class _HomePageState extends State<HomePage> {
       ),
       actions: [
         IconButton(
-            onPressed: _deleteSelectedNotes, icon: const Icon(Icons.delete))
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    alignment: Alignment.bottomCenter,
+                    title:
+                        const Text("Notları silmek istedğinize emin misiniz?"),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _isSelectionMode = false;
+                            _selectedNoteIds.clear();
+                          });
+
+                          Navigator.pop(context);
+                        },
+                        child: const Text('Hayır'),
+                      ),
+                      TextButton(
+                          onPressed: () {
+                            _deleteSelectedNotes();
+                            Navigator.pop(context);
+                          },
+                          child: const Text("Evet"))
+                    ],
+                  );
+                },
+              );
+            },
+            icon: const Icon(Icons.delete))
       ],
     );
   }
